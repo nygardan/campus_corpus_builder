@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 import psycopg2
 from scraper import web_scrape
+from file_handler import write_to_file
+from datetime import datetime
 
 # Button functions (self-explanatory)
 def sort_by_state():
@@ -46,8 +48,14 @@ def scrape():
     url = cursor.fetchone()[0]
     print(url)
     try:
-        print("\n".join(web_scrape(url)))
-        print("Scrape Complete!")
+        content = "\n".join(web_scrape(url))
+        print(content)
+        dt = datetime.utcnow()
+        time_stamp = str(dt).replace(' ', '_').replace(':', '-')
+        write_to_file(college_id, time_stamp, content)
+        # Get file name and add it to database
+        
+        
     except Exception as e:
         print(type(e))
         print(e)

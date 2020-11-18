@@ -8,7 +8,7 @@ import re
 def parse_url(url):
     if url.startswith('https:'):
         return url 
-    elif url.startswith('www.'):
+    elif url.startswith('www'):
         return 'https://' + url
     else:
         return 'https://www.' + url
@@ -19,7 +19,7 @@ def web_scrape(url):
     keyword2='coronavirus'
     try:
         page = requests.get(parse_url(url), timeout=5)
-        soup = BeautifulSoup(page.text, 'html.parser')
+        soup = BeautifulSoup(page.text, 'lxml')
         links = soup.find_all('a', attrs={'href': re.compile("^http")})
         text = soup.find_all('p')
         
@@ -32,7 +32,7 @@ def web_scrape(url):
             try:
                 address = link.get('href')
                 page = requests.get(address, timeout=5)
-                soup = BeautifulSoup(page.text, 'html.parser')
+                soup = BeautifulSoup(page.text, 'lxml')
                 text = soup.find_all('p')
                 for t in text:
                     u = t.get_text()
