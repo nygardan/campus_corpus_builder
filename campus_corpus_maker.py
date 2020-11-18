@@ -39,8 +39,18 @@ def sort_by_act_score():
 
 def scrape():
     colleges = list(eval(college_list_var.get()))
-    print(colleges[results_listbox.curselection()[0]])
-    url_query = """SELECT  """
+    college_id = colleges[results_listbox.curselection()[0]][0]
+    print(college_id)
+    url_query = """SELECT website FROM college_info WHERE college_id = %s""" % college_id 
+    cursor.execute(url_query)
+    url = cursor.fetchone()[0]
+    print(url)
+    try:
+        print("\n".join(web_scrape(url)))
+        print("Scrape Complete!")
+    except Exception as e:
+        print(type(e))
+        print(e)
 
 # This one is not tied to a button but used to populate the state selection box.
 def get_state_list():
