@@ -8,7 +8,7 @@ from datetime import datetime
 # Button functions (self-explanatory)
 def sort_by_state():
     if state_combobox.get():
-        state_query = "SELECT college_id, name, city, state, family_income FROM college_info WHERE state = '%s' ORDER BY name %s" % (state_combobox.get(), asc_desc_var.get())
+        state_query = "SELECT college_id, name, city, state, family_income FROM college_info WHERE state = '%s' %s ORDER BY name %s" % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
     else:
         state_query = "SELECT college_id, name, city, state, family_income FROM college_info ORDER BY name %s" % asc_desc_var.get()
     cursor.execute(state_query)
@@ -18,7 +18,7 @@ def sort_by_state():
 def sort_by_income():
     state_combobox.set('')
     income_query = """SELECT college_id, name, city, state, family_income FROM college_info 
-    WHERE operating=1 AND family_income IS NOT NULL and family_income > 0.0 ORDER BY family_income %s""" % asc_desc_var.get()
+    WHERE operating=1 AND family_income IS NOT NULL and family_income > 0.0 %s ORDER BY family_income %s""" % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(income_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
@@ -26,7 +26,7 @@ def sort_by_income():
 def sort_by_selectiveness():
     state_combobox.set('')
     selectiveness_query = """SELECT college_id, name, city, state, admission FROM college_info 
-    WHERE operating=1 AND admission IS NOT NULL ORDER BY admission %s""" % asc_desc_var.get()
+    WHERE operating=1 AND admission IS NOT NULL %s ORDER BY admission %s""" % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(selectiveness_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
@@ -34,7 +34,7 @@ def sort_by_selectiveness():
 def sort_by_act_score():
     state_combobox.set('')
     act_query = """SELECT college_id, name, city, state, act_score FROM college_info 
-    WHERE operating=1 AND act_score IS NOT NULL ORDER BY act_score %s""" % asc_desc_var.get()
+    WHERE operating=1 AND act_score IS NOT NULL %s ORDER BY act_score %s""" % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(act_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
@@ -60,7 +60,6 @@ def scrape():
         file_nme, pages_count, fault_count) VALUES (%s, %s, %s, %s, %s)"""
         cursor.execute(scrape_upload_query, (str(college_id), str(dt), file_name, len(output), len(errors)))
         conn.commit()
-        
         
     except Exception as e:
         print(type(e))
@@ -95,7 +94,9 @@ scrape_frame = tk.Frame()
 # Get the list from the database and assign StringVars (necessary for many tkinter functions)
 state_var = tk.StringVar()
 asc_desc_var = tk.StringVar()
+two_or_four_var = tk.StringVar()
 asc_desc_var.set('ASC')
+two_or_four_var.set('AND level IN (1, 2, 3)')
 cursor.execute("SELECT college_id, name, city, state, family_income FROM college_info WHERE operating=1 ORDER BY name %s" % asc_desc_var.get())
 college_list = cursor.fetchall()
 college_list_var = tk.StringVar(value=college_list)
@@ -111,6 +112,9 @@ scrape_button = tk.Button(master=scrape_frame, text="Scrape", command=scrape)
 act_score_button = tk.Button(master=control_frame, text = "Sort by ACT Score", command=sort_by_act_score)
 asc_radio = tk.Radiobutton(control_frame, text='Ascending', variable=asc_desc_var, value='ASC')
 desc_radio = tk.Radiobutton(control_frame, text='Descending', variable=asc_desc_var, value='DESC')
+two_year_radio = tk.Radiobutton(control_frame, text='Two-Year', variable=two_or_four_var, value='AND level IN (2,3)')
+four_year_radio = tk.Radiobutton(control_frame, text='Four_Year', variable=two_or_four_var, value='AND level = 1')
+all_years_radio = tk.Radiobutton(control_frame, text='All', variable=two_or_four_var, value='AND level IN (1, 2, 3)')
 
 # Place the widgets onto the canvas
 results_listbox.pack()
@@ -122,6 +126,9 @@ selectiveness_button.pack()
 act_score_button.pack()
 asc_radio.pack()
 desc_radio.pack()
+two_year_radio.pack()
+four_year_radio.pack()
+all_years_radio.pack()
 control_frame.grid(row=0, column=1)
 scrape_frame.grid(row=0, column=2)
 scrape_button.pack()
