@@ -15,6 +15,7 @@ def parse_url(url):
 
 def web_scrape(url):
     output_list = []
+    error_list = ['\n########\n',]
     keyword1='covid'
     keyword2='coronavirus'
     try:
@@ -39,10 +40,10 @@ def web_scrape(url):
                     if keyword1 in u.lower() or keyword2 in u.lower():
                         output_list.append(u)
             except Exception as e:
-                output_list.append(str(e))
+                error_list.append(str(e))
             
-        return output_list
+        return output_list, error_list
     
     except Exception as e:
-        output_list.append(str(e))
-        return output_list
+        error_list.append(str(e))
+        return output_list, error_list

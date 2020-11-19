@@ -8,3 +8,19 @@ out_state_tuition INT, family_income FLOAT, level INT, PRIMARY KEY (college_id))
 college_id, name, city, state, website, highest_degree, control, locale, class, religion, admission, act_score,
 sat_score, enrollment, operating, in_state_tuition, out_state_tuition, family_income, level
 
+
+
+CREATE TABLE scrape_info
+( scrape_id SERIAL PRIMARY KEY,
+college_id INT,
+date_time TIMESTAMP WITH TIME ZONE,
+file_nme VARCHAR(100),
+pages_count INT,
+fault_count INT,
+FOREIGN KEY (college_id) REFERENCES college_info ON DELETE CASCADE);
+
+
+CREATE TABLE scrape_info (scrape_id SERIAL PRIMARY KEY, college_id INT,
+date_time TIMESTAMP WITH TIME ZONE, file_nme VARCHAR(100), pages_count INT,
+fault_count INT, FOREIGN KEY (college_id) REFERENCES college_info ON DELETE CASCADE);
+

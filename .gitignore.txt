@@ -6,7 +6,7 @@ __pycache__/
 # C extensions
 *.so
 
-scrapes/
+/scrapes/
 
 # Distribution / packaging
 .Python

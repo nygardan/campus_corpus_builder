@@ -48,12 +48,18 @@ def scrape():
     url = cursor.fetchone()[0]
     print(url)
     try:
-        content = "\n".join(web_scrape(url))
+        output, errors = web_scrape(url)
+        final_list = output + errors
+        content = "\n".join(final_list)
         print(content)
         dt = datetime.utcnow()
         time_stamp = str(dt).replace(' ', '_').replace(':', '-')
-        write_to_file(college_id, time_stamp, content)
+        file_name = write_to_file(college_id, time_stamp, content)
         # Get file name and add it to database
+        scrape_upload_query = """INSERT INTO scrape_info (college_id, date_time, 
+        file_nme, pages_count, fault_count) VALUES (%s, %s, %s, %s, %s)"""
+        cursor.execute(scrape_upload_query, (str(college_id), str(dt), file_name, len(output), len(errors)))
+        conn.commit()
         
         
     except Exception as e:
