@@ -11,6 +11,7 @@ psycopg2-binary = "*"
 requests = "*"
 beautifulsoup4 = "*"
 lxml = "*"
+nltk = "*"
 
 [requires]
 python_version = "3.6"

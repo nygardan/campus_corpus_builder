@@ -7,7 +7,8 @@ __pycache__/
 *.so
 
 
-*.scrape 
+*.scrape
+*.json
 
 # Distribution / packaging
 .Python

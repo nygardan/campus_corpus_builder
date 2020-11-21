@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import psycopg2
 from scraper import web_scrape
-from file_handler import write_to_file
+from file_handler import *
 from datetime import datetime
 
 # Button functions (self-explanatory)
@@ -39,6 +39,7 @@ def sort_by_act_score():
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
 
+# Our most important (and most complicated) method.
 def scrape():
     colleges = list(eval(college_list_var.get()))
     college_id = colleges[results_listbox.curselection()[0]][0]
@@ -49,16 +50,18 @@ def scrape():
     print(url)
     try:
         output, errors = web_scrape(url)
-        final_list = output + errors
-        content = "\n".join(final_list)
+        output_string = "\n".join(output)
+        error_string = "\n".join(errors)
+        content = output_string + error_string
         print(content)
         dt = datetime.utcnow()
         time_stamp = str(dt).replace(' ', '_').replace(':', '-')
-        file_name = write_to_file(college_id, time_stamp, content)
+        raw_file_name = write_to_file(college_id, time_stamp, content)
+        processed_file_name = process_nlp_to_file(raw_file_name, time_stamp, output_string)
         # Get file name and add it to database
         scrape_upload_query = """INSERT INTO scrape_info (college_id, date_time, 
         file_nme, pages_count, fault_count) VALUES (%s, %s, %s, %s, %s)"""
-        cursor.execute(scrape_upload_query, (str(college_id), str(dt), file_name, len(output), len(errors)))
+        cursor.execute(scrape_upload_query, (str(college_id), str(dt), raw_file_name, len(output), len(errors)))
         conn.commit()
         
     except Exception as e:
