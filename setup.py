@@ -39,21 +39,29 @@ enrollment, operating, in_state_tuition, out_state_tuition, family_income, level
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
 drop_college_table_query = """DROP TABLE IF EXISTS college_info CASCADE"""
-drop_scrape_table_query = """DROP TABLE IF EXISTS scrape_info"""
+drop_scrape_table_query = """DROP TABLE IF EXISTS scrape_info CASCADE"""
+drop_nlp_table_query = """DROP TABLE IF EXISTS nlp_info"""
+
 create_college_table_query = """CREATE TABLE college_info
 (college_id INT, name VARCHAR(150), city VARCHAR(50), state CHAR(2), website VARCHAR(250),
 highest_degree INT, control INT, locale INT, class INT, religion INT, admission FLOAT,
 act_score FLOAT, sat_score FLOAT, enrollment INT, operating INT, in_state_tuition INT,
 out_state_tuition INT, family_income FLOAT, level INT, PRIMARY KEY (college_id));"""
+
 create_scrape_table_query = """CREATE TABLE scrape_info (scrape_id SERIAL PRIMARY KEY, college_id INT,
-date_time TIMESTAMP WITH TIME ZONE, file_nme VARCHAR(100), pages_count INT,
+date_time TIMESTAMP WITH TIME ZONE, file_name VARCHAR(100), pages_count INT,
 fault_count INT, FOREIGN KEY (college_id) REFERENCES college_info ON DELETE CASCADE);"""
+
+create_nlp_table_query = """CREATE TABLE nlp_info ( nlp_file_id SERIAL PRIMARY KEY, scrape_id INT,
+file_name VARCHAR(100), token_count INT, FOREIGN KEY (scrape_id) REFERENCES scrape_info ON DELETE CASCADE);"""
 
 try:
     cursor.execute(drop_college_table_query)
     cursor.execute(drop_scrape_table_query)
+    cursor.execute(drop_nlp_table_query)
     cursor.execute(create_college_table_query)
     cursor.execute(create_scrape_table_query)
+    cursor.execute(create_nlp_table_query)
     cursor.executemany(query, rows)
     conn.commit()
     print("Input completed.")

@@ -14,13 +14,24 @@ CREATE TABLE scrape_info
 ( scrape_id SERIAL PRIMARY KEY,
 college_id INT,
 date_time TIMESTAMP WITH TIME ZONE,
-file_nme VARCHAR(100),
+file_name VARCHAR(100),
 pages_count INT,
 fault_count INT,
 FOREIGN KEY (college_id) REFERENCES college_info ON DELETE CASCADE);
 
 
 CREATE TABLE scrape_info (scrape_id SERIAL PRIMARY KEY, college_id INT,
-date_time TIMESTAMP WITH TIME ZONE, file_nme VARCHAR(100), pages_count INT,
+date_time TIMESTAMP WITH TIME ZONE, file_name VARCHAR(100), pages_count INT,
 fault_count INT, FOREIGN KEY (college_id) REFERENCES college_info ON DELETE CASCADE);
+
+CREATE TABLE nlp_info
+( nlp_file_id = SERIAL PRIMARY KEY,
+scrape_id INT,
+file_name VARCHAR(100),
+token_count INT,
+FOREIGN KEY (scrape_id) REFERENCES scrape_info ON DELETE CASCADE);
+)
+
+CREATE TABLE nlp_info ( nlp_file_id = SERIAL PRIMARY KEY, scrape_id INT,
+file_name VARCHAR(100), token_count INT, FOREIGN KEY (scrape_id) REFERENCES scrape_info ON DELETE CASCADE);
 

@@ -22,13 +22,13 @@ def process_nlp_to_file(file_name, date, content):
 
     # Use nltk to tokenize.
     processed_content = wordpunct_tokenize(content)
-    print(new_file_name)
-    print(processed_content)
+
+    # This is causing a Unicode Decode error in some instances (VMI, for instance) - keep searching for the solution!
     new_file = open(file_path, 'w')
-    json.dump(processed_content, new_file)
+    json.dump(processed_content, new_file, ensure_ascii=False)
     new_file.close()
-    print('processed NLP file completed')
-    return new_file_name
+    print('Processed NLP file completed')
+    return (new_file_name, str(len(processed_content)))
     
 
 

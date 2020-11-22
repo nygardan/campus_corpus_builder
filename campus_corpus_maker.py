@@ -57,12 +57,18 @@ def scrape():
         dt = datetime.utcnow()
         time_stamp = str(dt).replace(' ', '_').replace(':', '-')
         raw_file_name = write_to_file(college_id, time_stamp, content)
-        processed_file_name = process_nlp_to_file(raw_file_name, time_stamp, output_string)
+        processed_file_name, token_count = process_nlp_to_file(raw_file_name, time_stamp, output_string)
         # Get file name and add it to database
+        print(processed_file_name + str(token_count))
         scrape_upload_query = """INSERT INTO scrape_info (college_id, date_time, 
-        file_nme, pages_count, fault_count) VALUES (%s, %s, %s, %s, %s)"""
+        file_name, pages_count, fault_count) VALUES (%s, %s, %s, %s, %s) RETURNING scrape_id;"""
         cursor.execute(scrape_upload_query, (str(college_id), str(dt), raw_file_name, len(output), len(errors)))
+        id_of_scrape = cursor.fetchone()[0]
         conn.commit()
+        processed_file_query = """INSERT INTO nlp_info (scrape_id, file_name, token_count) VALUES (%s, %s, %s)"""
+        cursor.execute(processed_file_query, (id_of_scrape, processed_file_name, token_count))
+        conn.commit()
+        
         
     except Exception as e:
         print(type(e))
