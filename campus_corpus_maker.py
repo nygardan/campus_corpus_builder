@@ -85,7 +85,7 @@ try:
     conn = psycopg2.connect(
         dbname= "postgres",
         user = "postgres",
-        password = "All25star!",
+        password = "postgres",
         port = 5432)
     print("Connected to database.")
     cursor = conn.cursor()
