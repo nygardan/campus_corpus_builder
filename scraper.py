@@ -24,17 +24,22 @@ def web_scrape(url):
         links = soup.find_all('a', attrs={'href': re.compile("^http")})
         text = soup.find_all('p')
         
+        # new_list = [t for t in text if keyword1 in t.get_text().lower() or keyword2 in t.get_text().lower()]
+        # output_list += new_list
         for t in text:
             u = t.get_text()
             if keyword1 in u.lower() or keyword2 in u.lower():
                 output_list.append(u)
 
+        
         for link in links:
             try:
                 address = link.get('href')
                 page = requests.get(address, timeout=5)
                 soup = BeautifulSoup(page.text, 'lxml')
                 text = soup.find_all('p')
+                # new_list = [t for t in text if keyword1 in t.get_text().lower() or keyword2 in t.get_text().lower()]
+                # output_list += new_list
                 for t in text:
                     u = t.get_text()
                     if keyword1 in u.lower() or keyword2 in u.lower():
