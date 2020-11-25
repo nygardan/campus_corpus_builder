@@ -3,10 +3,10 @@
 """
 @author: danygard
 
-Credit to 
+Credit to
 https://naysan.ca/2020/05/09/pandas-to-postgresql-using-psycopg2-bulk-insert-performance-benchmark/
 for help in understanding how to use the psycopg2 cursor's executemany() method
-and for helping me understand how to pull rows out of a dataframe. 
+and for helping me understand how to pull rows out of a dataframe.
 
 """
 
@@ -14,18 +14,19 @@ import pandas as pd
 import psycopg2
 
 df = pd.read_csv("college_info.csv", encoding = "ISO-8859-1", engine='python', na_values='PrivacySuppressed')
-try:    
+try:
     conn = psycopg2.connect(
         dbname= "postgres",
         user = "postgres",
         password = "postgres",
+        host = 'localhost',
         port = 5432)
     print("Connected to database.")
 
 except:
     print("Failed to connect to database.")
 
-# Credit for this line of code goes to the website given above    
+# Credit for this line of code goes to the website given above
 rows = [tuple(x) for x in df.to_numpy(na_value=None)]
 
 ##column_list = ['loan_id', 'gender', 'married', 'dependents', 'education',
@@ -35,7 +36,7 @@ rows = [tuple(x) for x in df.to_numpy(na_value=None)]
 cursor = conn.cursor()
 query = """INSERT INTO college_info(college_id, name, city, state, website,
 highest_degree, control, locale, class, religion, admission, act_score, sat_score,
-enrollment, operating, in_state_tuition, out_state_tuition, family_income, level) 
+enrollment, operating, in_state_tuition, out_state_tuition, family_income, level)
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
 drop_college_table_query = """DROP TABLE IF EXISTS college_info CASCADE"""
@@ -70,14 +71,11 @@ try:
     results = cursor.fetchall()
     for r in results:
         print(r)
-    
+
 except (Exception, psycopg2.DatabaseError) as error:
     print("Database Error {}".format(error))
     conn.rollback()
     cursor.close()
-    
+
 print("Complete.")
 cursor.close()
-
-
-

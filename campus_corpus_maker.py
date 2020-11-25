@@ -17,7 +17,7 @@ def sort_by_state():
 
 def sort_by_income():
     state_combobox.set('')
-    income_query = """SELECT college_id, name, city, state, family_income FROM college_info 
+    income_query = """SELECT college_id, name, city, state, family_income FROM college_info
     WHERE operating=1 AND family_income IS NOT NULL and family_income > 0.0 %s ORDER BY family_income %s""" % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(income_query)
     college_list = cursor.fetchall()
@@ -25,7 +25,7 @@ def sort_by_income():
 
 def sort_by_selectiveness():
     state_combobox.set('')
-    selectiveness_query = """SELECT college_id, name, city, state, admission FROM college_info 
+    selectiveness_query = """SELECT college_id, name, city, state, admission FROM college_info
     WHERE operating=1 AND admission IS NOT NULL %s ORDER BY admission %s""" % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(selectiveness_query)
     college_list = cursor.fetchall()
@@ -33,7 +33,7 @@ def sort_by_selectiveness():
 
 def sort_by_act_score():
     state_combobox.set('')
-    act_query = """SELECT college_id, name, city, state, act_score FROM college_info 
+    act_query = """SELECT college_id, name, city, state, act_score FROM college_info
     WHERE operating=1 AND act_score IS NOT NULL %s ORDER BY act_score %s""" % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(act_query)
     college_list = cursor.fetchall()
@@ -42,37 +42,43 @@ def sort_by_act_score():
 # Our most important (and most complicated) method.
 def scrape():
     colleges = list(eval(college_list_var.get()))
-    college_id = colleges[results_listbox.curselection()[0]][0]
-    print(college_id)
-    url_query = """SELECT website FROM college_info WHERE college_id = %s""" % college_id 
-    cursor.execute(url_query)
-    url = cursor.fetchone()[0]
-    print(url)
-    try:
-        output, errors = web_scrape(url)
-        output_string = "\n".join(output)
-        error_string = "\n".join(errors)
-        content = output_string + error_string
-        print(content)
-        dt = datetime.utcnow()
-        time_stamp = str(dt).replace(' ', '_').replace(':', '-')
-        raw_file_name = write_to_file(college_id, time_stamp, content)
-        processed_file_name, token_count = process_nlp_to_file(raw_file_name, time_stamp, output_string)
-        # Get file name and add it to database
-        print(processed_file_name + str(token_count))
-        scrape_upload_query = """INSERT INTO scrape_info (college_id, date_time, 
-        file_name, pages_count, fault_count) VALUES (%s, %s, %s, %s, %s) RETURNING scrape_id;"""
-        cursor.execute(scrape_upload_query, (str(college_id), str(dt), raw_file_name, len(output), len(errors)))
-        id_of_scrape = cursor.fetchone()[0]
-        conn.commit()
-        processed_file_query = """INSERT INTO nlp_info (scrape_id, file_name, token_count) VALUES (%s, %s, %s)"""
-        cursor.execute(processed_file_query, (id_of_scrape, processed_file_name, token_count))
-        conn.commit()
-        
-        
-    except Exception as e:
-        print(type(e))
-        print(e)
+    college_ids = []
+    for number in results_listbox.curselection():
+        college_ids.append(colleges[number][0])
+
+    print(college_ids)
+    for college_id in college_ids:
+        url_query = """SELECT website FROM college_info WHERE college_id = %s""" % college_id
+        cursor.execute(url_query)
+        url = cursor.fetchone()[0]
+        print(url)
+        try:
+            output, errors = web_scrape(url)
+            output_string = "\n".join(output)
+            error_string = "\n".join(errors)
+            content = output_string + error_string
+            #print(content)
+            dt = datetime.utcnow()
+            time_stamp = str(dt).replace(' ', '_').replace(':', '-')
+            raw_file_name = write_to_file(college_id, time_stamp, content)
+            processed_file_name, token_count = process_nlp_to_file(raw_file_name, time_stamp, output_string)
+            # Get file name and add it to database
+            print(processed_file_name + str(token_count))
+            scrape_upload_query = """INSERT INTO scrape_info (college_id, date_time,
+            file_name, pages_count, fault_count) VALUES (%s, %s, %s, %s, %s) RETURNING scrape_id;"""
+            cursor.execute(scrape_upload_query, (str(college_id), str(dt), raw_file_name, len(output), len(errors)))
+            id_of_scrape = cursor.fetchone()[0]
+            conn.commit()
+            processed_file_query = """INSERT INTO nlp_info (scrape_id, file_name, token_count) VALUES (%s, %s, %s)"""
+            cursor.execute(processed_file_query, (id_of_scrape, processed_file_name, token_count))
+            conn.commit()
+
+
+        except Exception as e:
+            print(type(e))
+            print(e)
+
+    print("\nScrape complete!")
 
 # This one is not tied to a button but used to populate the state selection box.
 def get_state_list():
@@ -81,11 +87,12 @@ def get_state_list():
     return cursor.fetchall()
 
 # Connect to the database.
-try:    
+try:
     conn = psycopg2.connect(
         dbname= "postgres",
         user = "postgres",
         password = "postgres",
+        host = 'localhost',
         port = 5432)
     print("Connected to database.")
     cursor = conn.cursor()
@@ -111,7 +118,7 @@ college_list = cursor.fetchall()
 college_list_var = tk.StringVar(value=college_list)
 
 # Make widgets
-results_listbox = tk.Listbox(list_box_frame, height=25, width=75, listvariable = college_list_var)
+results_listbox = tk.Listbox(list_box_frame, selectmode='extended', height=25, width=75, listvariable = college_list_var)
 state_combobox = ttk.Combobox(control_frame, textvariable=state_var)
 state_combobox['values']=get_state_list()
 state_button = tk.Button(master=control_frame, text="Sort by State", command=sort_by_state)
