@@ -8,12 +8,15 @@ from datetime import datetime
 # Button functions (self-explanatory)
 def sort_by_state():
     if state_combobox.get():
-        state_query = "SELECT college_id, name, city, state, family_income FROM college_info WHERE state = '%s' %s ORDER BY name %s" % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
+        state_query = """SELECT college_id, name, city, state, family_income
+        FROM college_info WHERE operating = 1 AND state = '%s' %s ORDER BY name %s""" % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
     else:
-        state_query = "SELECT college_id, name, city, state, family_income FROM college_info ORDER BY name %s" % asc_desc_var.get()
+        state_query = """SELECT college_id, name, city, state, family_income
+        FROM college_info WHERE operating = 1 %s ORDER BY name %s""" % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(state_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
+    count_label_var.set(str(len(college_list)))
 
 def sort_by_income():
     state_combobox.set('')
@@ -22,6 +25,7 @@ def sort_by_income():
     cursor.execute(income_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
+    count_label_var.set(str(len(college_list)))
 
 def sort_by_selectiveness():
     state_combobox.set('')
@@ -30,6 +34,7 @@ def sort_by_selectiveness():
     cursor.execute(selectiveness_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
+    count_label_var.set(str(len(college_list)))
 
 def sort_by_act_score():
     state_combobox.set('')
@@ -38,6 +43,7 @@ def sort_by_act_score():
     cursor.execute(act_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
+    count_label_var.set(str(len(college_list)))
 
 # Our most important (and most complicated) method.
 def scrape():
@@ -48,17 +54,23 @@ def scrape():
 
     print(college_ids)
     for college_id in college_ids:
-        url_query = """SELECT website FROM college_info WHERE college_id = %s""" % college_id
+        url_query = """SELECT website, name FROM college_info WHERE college_id = %s""" % college_id
         cursor.execute(url_query)
-        url = cursor.fetchone()[0]
+        info = cursor.fetchone()
+        url = info[0]
+        college_name = info[1]
+        dt = datetime.utcnow()
+        info_string = "[## %s %s %s  ##]\n" % (college_name, dt.date(), dt.time())
         print(url)
+        print(college_name)
         try:
+
             output, errors = web_scrape(url)
             output_string = "\n".join(output)
             error_string = "\n".join(errors)
-            content = output_string + error_string
+            content = info_string + output_string + error_string
             #print(content)
-            dt = datetime.utcnow()
+
             time_stamp = str(dt).replace(' ', '_').replace(':', '-')
             raw_file_name = write_to_file(college_id, time_stamp, content)
             processed_file_name, token_count = process_nlp_to_file(raw_file_name, time_stamp, output_string)
@@ -118,9 +130,13 @@ two_or_four_var.set('AND level IN (1, 2, 3)')
 cursor.execute("SELECT college_id, name, city, state, family_income FROM college_info WHERE operating=1 ORDER BY name %s" % asc_desc_var.get())
 college_list = cursor.fetchall()
 college_list_var = tk.StringVar(value=college_list)
+count_label_var = tk.StringVar()
+count_label_var.set(str(len(college_list)))
 
 # Make widgets
-results_listbox = tk.Listbox(list_box_frame, selectmode='extended', height=25, width=75, listvariable = college_list_var)
+count_label = tk.Label(list_box_frame, textvariable=count_label_var)
+results_listbox = tk.Listbox(list_box_frame, selectmode='extended', height=35, width=75, listvariable = college_list_var)
+scrollbar = tk.Scrollbar(list_box_frame)
 state_combobox = ttk.Combobox(control_frame, textvariable=state_var)
 state_combobox['values']=get_state_list()
 state_button = tk.Button(master=control_frame, text="Sort by State", command=sort_by_state)
@@ -135,7 +151,11 @@ four_year_radio = tk.Radiobutton(control_frame, text='Four_Year', variable=two_o
 all_years_radio = tk.Radiobutton(control_frame, text='All', variable=two_or_four_var, value='AND level IN (1, 2, 3)')
 
 # Place the widgets onto the canvas
-results_listbox.pack()
+count_label.pack()
+results_listbox.pack(side='left', fill='both')
+scrollbar.pack(side='right', fill='both')
+results_listbox.config(yscrollcommand = scrollbar.set)
+scrollbar.config(command = results_listbox.yview)
 list_box_frame.grid(row=0, column=0)
 state_combobox.pack()
 state_button.pack()
