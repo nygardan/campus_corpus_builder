@@ -2,7 +2,6 @@ import os
 import json
 from nltk import wordpunct_tokenize
 
-
 def write_to_file(college_id, date, content):
     dir = os.path.dirname(__file__)
     # Put the last part in a separate string and return it so it can be put in the database.
@@ -29,6 +28,3 @@ def process_nlp_to_file(file_name, date, content):
     new_file.close()
     print('Processed NLP file completed')
     return (new_file_name, str(len(processed_content)))
-    
-
-

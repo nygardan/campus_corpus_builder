@@ -68,9 +68,11 @@ def scrape():
             file_name, pages_count, fault_count) VALUES (%s, %s, %s, %s, %s) RETURNING scrape_id;"""
             cursor.execute(scrape_upload_query, (str(college_id), str(dt), raw_file_name, len(output), len(errors)))
             id_of_scrape = cursor.fetchone()[0]
+            nlp_type = 'word_tokenized'
             conn.commit()
-            processed_file_query = """INSERT INTO nlp_info (scrape_id, file_name, token_count) VALUES (%s, %s, %s)"""
-            cursor.execute(processed_file_query, (id_of_scrape, processed_file_name, token_count))
+            processed_file_query = """INSERT INTO nlp_info (scrape_id, file_name,
+            token_count, nlp_type) VALUES (%s, %s, %s, %s)"""
+            cursor.execute(processed_file_query, (id_of_scrape, processed_file_name, token_count, nlp_type))
             conn.commit()
 
 

@@ -54,7 +54,7 @@ date_time TIMESTAMP WITH TIME ZONE, file_name VARCHAR(100), pages_count INT,
 fault_count INT, FOREIGN KEY (college_id) REFERENCES college_info ON DELETE CASCADE);"""
 
 create_nlp_table_query = """CREATE TABLE nlp_info ( nlp_file_id SERIAL PRIMARY KEY, scrape_id INT,
-file_name VARCHAR(100), token_count INT, FOREIGN KEY (scrape_id) REFERENCES scrape_info ON DELETE CASCADE);"""
+file_name VARCHAR(100), token_count INT, nlp_type VARCHAR(30), FOREIGN KEY (scrape_id) REFERENCES scrape_info ON DELETE CASCADE);"""
 
 try:
     cursor.execute(drop_college_table_query)
