@@ -19,27 +19,41 @@ def sort_by_state():
     count_label_var.set(str(len(college_list)))
 
 def sort_by_income():
-    state_combobox.set('')
-    income_query = """SELECT college_id, name, city, state, family_income FROM college_info
-    WHERE operating=1 AND family_income IS NOT NULL and family_income > 0.0 %s ORDER BY family_income %s""" % (two_or_four_var.get(), asc_desc_var.get())
+    if state_combobox.get():
+        income_query = """SELECT college_id, name, city, state, family_income FROM college_info
+        WHERE operating=1 AND family_income IS NOT NULL and state = '%s' and family_income > 0.0 %s 
+        ORDER BY family_income %s""" % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
+    else:
+        income_query = """SELECT college_id, name, city, state, family_income FROM college_info
+        WHERE operating=1 AND family_income IS NOT NULL and family_income > 0.0 %s 
+        ORDER BY family_income %s""" % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(income_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
     count_label_var.set(str(len(college_list)))
 
 def sort_by_selectiveness():
-    state_combobox.set('')
-    selectiveness_query = """SELECT college_id, name, city, state, admission FROM college_info
-    WHERE operating=1 AND admission IS NOT NULL %s ORDER BY admission %s""" % (two_or_four_var.get(), asc_desc_var.get())
+    if state_combobox.get():
+        selectiveness_query = """SELECT college_id, name, city, state, admission 
+        FROM college_info WHERE operating=1 AND state = '%s' AND admission IS NOT NULL %s 
+        ORDER BY admission %s""" % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
+    else:
+        selectiveness_query = """SELECT college_id, name, city, state, admission 
+        FROM college_info WHERE operating=1 AND admission IS NOT NULL %s 
+        ORDER BY admission %s""" % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(selectiveness_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
     count_label_var.set(str(len(college_list)))
 
 def sort_by_act_score():
-    state_combobox.set('')
-    act_query = """SELECT college_id, name, city, state, act_score FROM college_info
-    WHERE operating=1 AND act_score IS NOT NULL %s ORDER BY act_score %s""" % (two_or_four_var.get(), asc_desc_var.get())
+    if state_combobox.get():
+        act_query = """SELECT college_id, name, city, state, act_score FROM college_info
+        WHERE operating=1 AND state = '%s' and act_score IS NOT NULL %s 
+        ORDER BY act_score %s""" % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
+    else:
+        act_query = """SELECT college_id, name, city, state, act_score FROM college_info
+        WHERE operating=1 AND act_score IS NOT NULL %s ORDER BY act_score %s""" % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(act_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
