@@ -33,8 +33,9 @@ def web_scrape(url):
                     address = link.get('href')
                 page = requests.get(address, timeout=5)
                 soup = BeautifulSoup(page.text, 'lxml')
-                text = soup.find_all('p')
-                new_list = [t.get_text() for t in text if keyword1 in t.get_text().lower() or keyword2 in t.get_text().lower()]
+                text = soup.find_all('p', text=True)
+                search_list = [t.get_text() for t in text]
+                new_list = [t for t in search_list if keyword1 in t.lower() or keyword2 in t.lower()]
                 print(new_list)
                 output_list += new_list
                 # for t in text:
