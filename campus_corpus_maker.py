@@ -10,18 +10,19 @@ def sort_by_state():
     if state_combobox.get():
         state_query = """SELECT college_id, name, city, state, family_income
         FROM college_info WHERE operating = 1 AND state = '%s' %s
-        ORDER BY name %s""" % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
-        state_scrape_query = """SELECT college_info.name, college_info.state,
-        scrape_info.date_time FROM college_info INNER JOIN scrape_info ON
-        college_info.college_id=scrape_info.college_id WHERE state = '%s' %s
-        ORDER BY college_info.name %s """ % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
+        ORDER BY name %s""" % (state_combobox.get().upper(), two_or_four_var.get(), asc_desc_var.get())
+        state_scrape_query = """SELECT name, state, date(date_time), to_char(date_time, 'HH:MM'), token_count
+        FROM college_info INNER JOIN scrape_info ON college_info.college_id=scrape_info.college_id
+        INNER JOIN nlp_info ON scrape_info.scrape_id=nlp_info.scrape_id
+        WHERE state = '%s' %s ORDER BY name %s
+        """ % (state_combobox.get().upper(), two_or_four_var.get(), asc_desc_var.get())
     else:
         state_query = """SELECT college_id, name, city, state, family_income
         FROM college_info WHERE operating = 1 %s ORDER BY name %s""" % (two_or_four_var.get(), asc_desc_var.get())
-        state_scrape_query = """SELECT college_info.name, college_info.state,
-        scrape_info.date_time FROM college_info INNER JOIN scrape_info ON
-        college_info.college_id=scrape_info.college_id WHERE operating = 1 %s
-        ORDER BY college_info.name %s""" % (two_or_four_var.get(), asc_desc_var.get())
+        state_scrape_query = """SELECT name, state, date(date_time), to_char(date_time, 'HH:MM'), token_count FROM college_info
+        INNER JOIN scrape_info ON college_info.college_id=scrape_info.college_id
+        INNER JOIN nlp_info ON scrape_info.scrape_id = nlp_info.scrape_id
+        WHERE operating = 1 %s ORDER BY name %s""" % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(state_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
@@ -36,19 +37,21 @@ def sort_by_income():
     if state_combobox.get():
         income_query = """SELECT college_id, name, city, state, family_income FROM college_info
         WHERE operating=1 AND family_income IS NOT NULL and state = '%s' and family_income > 0.0 %s
-        ORDER BY family_income %s""" % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
-        income_scrape_query = """ SELECT college_info.name, college_info.state,
-        scrape_info.date_time FROM college_info INNER JOIN scrape_info ON
-        college_info.college_id=scrape_info.college_id WHERE state = '%s' AND family_income
-        IS NOT NULL %s ORDER BY family_income %s """ % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
+        ORDER BY family_income, name %s""" % (state_combobox.get().upper(), two_or_four_var.get(), asc_desc_var.get())
+        income_scrape_query = """SELECT name, state, date(date_time), to_char(date_time, 'HH:MM'), token_count
+        FROM college_info INNER JOIN scrape_info ON college_info.college_id=scrape_info.college_id
+        INNER JOIN nlp_info ON scrape_info.scrape_id=nlp_info.scrape_id
+        WHERE state = '%s' AND family_income > 0.0 %s ORDER BY family_income, name
+        %s """ % (state_combobox.get().upper(), two_or_four_var.get(), asc_desc_var.get())
     else:
         income_query = """SELECT college_id, name, city, state, family_income FROM college_info
         WHERE operating=1 AND family_income IS NOT NULL and family_income > 0.0 %s
-        ORDER BY family_income %s""" % (two_or_four_var.get(), asc_desc_var.get())
-        income_scrape_query = """ SELECT college_info.name, college_info.state,
-        scrape_info.date_time FROM college_info INNER JOIN scrape_info ON
-        college_info.college_id=scrape_info.college_id WHERE operating=1 and family_income
-        IS NOT NULL %s ORDER BY family_income %s """ % (two_or_four_var.get(), asc_desc_var.get())
+        ORDER BY family_income, name %s""" % (two_or_four_var.get(), asc_desc_var.get())
+        income_scrape_query = """ SELECT name, state, date(date_time), to_char(date_time, 'HH:MM'), token_count
+        FROM college_info INNER JOIN scrape_info ON college_info.college_id=scrape_info.college_id
+        INNER JOIN nlp_info ON scrape_info.scrape_id=nlp_info.scrape_id
+        WHERE operating=1 and family_income > 0.0 %s
+        ORDER BY family_income, name %s """ % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(income_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
@@ -62,29 +65,60 @@ def sort_by_income():
 def sort_by_selectiveness():
     if state_combobox.get():
         selectiveness_query = """SELECT college_id, name, city, state, admission
-        FROM college_info WHERE operating=1 AND state = '%s' AND admission IS NOT NULL %s
-        ORDER BY admission %s""" % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
+        FROM college_info WHERE operating=1 AND state = '%s' AND admission > 0.0 %s
+        ORDER BY admission, name %s""" % (state_combobox.get().upper(), two_or_four_var.get(), asc_desc_var.get())
+        selectiveness_scrape_query = """SELECT name, state, date(date_time), to_char(date_time, 'HH:MM'), token_count
+        FROM college_info INNER JOIN scrape_info ON college_info.college_id=scrape_info.college_id
+        INNER JOIN nlp_info ON scrape_info.scrape_id=nlp_info.scrape_id
+        WHERE state = '%s' AND admission > 0.0 %s ORDER BY admission, name
+        %s """ % (state_combobox.get().upper(), two_or_four_var.get(), asc_desc_var.get())
     else:
         selectiveness_query = """SELECT college_id, name, city, state, admission
-        FROM college_info WHERE operating=1 AND admission IS NOT NULL %s
-        ORDER BY admission %s""" % (two_or_four_var.get(), asc_desc_var.get())
+        FROM college_info WHERE operating=1 AND admission > 0.0 %s
+        ORDER BY admission, name %s""" % (two_or_four_var.get(), asc_desc_var.get())
+        selectiveness_scrape_query = """ SELECT name, state, date(date_time), to_char(date_time, 'HH:MM'), token_count
+        FROM college_info INNER JOIN scrape_info ON college_info.college_id=scrape_info.college_id
+        INNER JOIN nlp_info ON scrape_info.scrape_id=nlp_info.scrape_id
+        WHERE operating=1 and admission > 0.0 %s
+        ORDER BY admission, name %s """ % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(selectiveness_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
     count_label_var.set(str(len(college_list)))
 
+    cursor.execute(selectiveness_scrape_query)
+    scrape_list = cursor.fetchall()
+    scrape_list_var.set(scrape_list)
+    scrape_count_label_var.set(str(len(scrape_list)))
+
 def sort_by_act_score():
     if state_combobox.get():
         act_query = """SELECT college_id, name, city, state, act_score FROM college_info
         WHERE operating=1 AND state = '%s' and act_score IS NOT NULL %s
-        ORDER BY act_score %s""" % (state_combobox.get(), two_or_four_var.get(), asc_desc_var.get())
+        ORDER BY act_score, name %s""" % (state_combobox.get().upper(), two_or_four_var.get(), asc_desc_var.get())
+        act_scrape_query = """SELECT name, state, date(date_time), to_char(date_time, 'HH:MM'), token_count
+        FROM college_info INNER JOIN scrape_info ON college_info.college_id=scrape_info.college_id
+        INNER JOIN nlp_info ON scrape_info.scrape_id=nlp_info.scrape_id
+        WHERE state = '%s' AND act_score IS NOT NULL %s ORDER BY act_score, name
+        %s """ % (state_combobox.get().upper(), two_or_four_var.get(), asc_desc_var.get())
     else:
         act_query = """SELECT college_id, name, city, state, act_score FROM college_info
-        WHERE operating=1 AND act_score IS NOT NULL %s ORDER BY act_score %s""" % (two_or_four_var.get(), asc_desc_var.get())
+        WHERE operating=1 AND act_score IS NOT NULL %s ORDER BY act_score, name %s
+        """ % (two_or_four_var.get(), asc_desc_var.get())
+        act_scrape_query = """ SELECT name, state, date(date_time), to_char(date_time, 'HH:MM'), token_count
+        FROM college_info INNER JOIN scrape_info ON college_info.college_id=scrape_info.college_id
+        INNER JOIN nlp_info ON scrape_info.scrape_id=nlp_info.scrape_id
+        WHERE operating=1 and act_score IS NOT NULL %s
+        ORDER BY act_score, name %s """ % (two_or_four_var.get(), asc_desc_var.get())
     cursor.execute(act_query)
     college_list = cursor.fetchall()
     college_list_var.set(college_list)
     count_label_var.set(str(len(college_list)))
+
+    cursor.execute(act_scrape_query)
+    scrape_list = cursor.fetchall()
+    scrape_list_var.set(scrape_list)
+    scrape_count_label_var.set(str(len(scrape_list)))
 
 # Our most important (and most complicated) method.
 def scrape():
@@ -174,9 +208,9 @@ college_list = cursor.fetchall()
 college_list_var = tk.StringVar(value=college_list)
 count_label_var = tk.StringVar()
 count_label_var.set(str(len(college_list)))
-cursor.execute("""SELECT college_info.name, college_info.state,
-scrape_info.date_time FROM college_info INNER JOIN scrape_info ON
-college_info.college_id=scrape_info.college_id
+cursor.execute("""SELECT name, state, date(date_time), to_char(date_time, 'HH:MM'), token_count
+FROM college_info INNER JOIN scrape_info ON college_info.college_id=scrape_info.college_id
+INNER JOIN nlp_info ON scrape_info.scrape_id=nlp_info.scrape_id
 ORDER BY college_info.name %s""" % asc_desc_var.get())
 scrape_list = cursor.fetchall()
 scrape_list_var = tk.StringVar(value=scrape_list)
@@ -187,9 +221,9 @@ scrape_count_label_var.set(str(len(scrape_list)))
 count_label = tk.Label(list_box_frame, textvariable=count_label_var)
 scrape_count_label = tk.Label(scrape_list_box_frame, textvariable=scrape_count_label_var)
 results_listbox = tk.Listbox(list_box_frame, selectmode='extended',
-height=35, width=75, listvariable = college_list_var)
-scrape_results_listbox = tk.Listbox(scrape_list_box_frame, height=35, width=50,
-listvariable = scrape_list_var)
+height=35, width=80, font='Arial 9', listvariable = college_list_var)
+scrape_results_listbox = tk.Listbox(scrape_list_box_frame, height=35, width=80,
+font='Arial 9', listvariable = scrape_list_var)
 scrollbar = tk.Scrollbar(list_box_frame)
 scrape_scrollbar = tk.Scrollbar(scrape_list_box_frame)
 state_combobox = ttk.Combobox(control_frame, textvariable=state_var)
