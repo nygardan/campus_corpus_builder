@@ -209,25 +209,33 @@ def read_files():
     ys.pack(side='right', fill='both')
 
     if len(scrape_results_listbox.curselection()) == 0:
-        text_display.insert('end', "Please select between 1 and 100 items.")
-
-    elif len(scrape_results_listbox.curselection()) > 100:
-        text_display.insert('end', "Please select between 1 and 100 items.")
+        scrapes = list(eval(scrape_list_var.get()))
+        scrape_ids = []
+        for scrape in scrapes:
+            scrape_ids.append(scrape[0])
 
     else:
         scrapes = list(eval(scrape_list_var.get()))
         scrape_ids = []
         for number in scrape_results_listbox.curselection():
             scrape_ids.append(scrapes[number][0])
-        scrape_tuple = tuple(scrape_ids)
-        file_ids_query = """SELECT file_name FROM scrape_info
-        WHERE scrape_id IN %s """
-        cursor.execute(file_ids_query, (scrape_tuple,))
-        file_ids = cursor.fetchall()
-        file_ids = [file[0] for file in file_ids]
-        text_list = read_from_files(file_ids)
-        for text in text_list:
-            text_display.insert('end', text + '\n\n')
+
+    scrape_tuple = tuple(scrape_ids)
+    file_ids_query = """SELECT file_name FROM scrape_info
+    WHERE scrape_id IN %s """
+    cursor.execute(file_ids_query, (scrape_tuple,))
+    file_ids = cursor.fetchall()
+    file_ids = [file[0] for file in file_ids]
+    text_list = read_from_files(file_ids)
+    for text in text_list:
+        text = fixTkBMP(text)
+        text_display.insert('end', text + '\n\n')
+
+# Taken from https://learning-python.com/cgi/showcode.py?name=pymailgui-products%2Funzipped%2FPyMailGui-PP4E%2FfixTkBMP.py&rawmode=view
+# Used to display text in the TKinter text box.
+def fixTkBMP(text):
+    text = ''.join((ch if ord(ch) <= 0xFFFF else '\uFFFD') for ch in text)
+    return text
 
 # These methods get the number of items in each listbox.
 def get_scrape_selectcount(*args):
@@ -243,6 +251,8 @@ def get_state_list():
     state_list_query = "SELECT DISTINCT state FROM college_info ORDER BY state"
     cursor.execute(state_list_query)
     return cursor.fetchall()
+
+
 
 # Connect to the database.
 try:
