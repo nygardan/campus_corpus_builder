@@ -169,6 +169,7 @@ def scrape():
 
     print("\nScrape complete!")
 
+# Used to get the statistics that appear in the rightmost side of the GUI.
 def get_stats():
     total_scrapes_label_var.set("Total scrapes: ")
     total_successful_scrapes_label_var.set("Successful scrapes: ")
@@ -186,7 +187,6 @@ def get_stats():
             scrape_ids.append(scrapes[number][0])
 
     scrape_tuple = tuple(scrape_ids)
-    print(scrape_tuple)
     total_scrapes_label_var.set(total_scrapes_label_var.get() + str(len(scrape_ids)))
     successful_scrapes_query = """SELECT COUNT (token_count) FROM nlp_info
     WHERE scrape_id IN %s AND token_count > 0""" % str(scrape_tuple)
@@ -197,6 +197,14 @@ def get_stats():
     cursor.execute(token_count_query)
     total_tokens_label_var.set(total_tokens_label_var.get() + str(cursor.fetchall()[0][0]))
 
+def read_files():
+    newWindow = Toplevel(window)
+    newWindow.geometry(200 x 200)
+    
+
+
+
+# These methods get the number of items in each listbox.
 def get_scrape_selectcount(*args):
     selected = scrape_results_listbox.curselection()
     scrape_selectcount_label_var.set(str(len(selected)))
