@@ -189,20 +189,45 @@ def get_stats():
     scrape_tuple = tuple(scrape_ids)
     total_scrapes_label_var.set(total_scrapes_label_var.get() + str(len(scrape_ids)))
     successful_scrapes_query = """SELECT COUNT (token_count) FROM nlp_info
-    WHERE scrape_id IN %s AND token_count > 0""" % str(scrape_tuple)
-    cursor.execute(successful_scrapes_query)
+    WHERE scrape_id IN %s AND token_count > 0"""
+    cursor.execute(successful_scrapes_query, (scrape_tuple,))
     total_successful_scrapes_label_var.set(total_successful_scrapes_label_var.get() + str(cursor.fetchall()[0][0]))
     token_count_query = """SELECT SUM (token_count) FROM nlp_info
-    where scrape_id IN %s """ % str(tuple(scrape_ids))
-    cursor.execute(token_count_query)
+    where scrape_id IN %s """
+    cursor.execute(token_count_query, (scrape_tuple,))
     total_tokens_label_var.set(total_tokens_label_var.get() + str(cursor.fetchall()[0][0]))
 
 def read_files():
-    newWindow = Toplevel(window)
-    newWindow.geometry(200 x 200)
-    
+    new_window = tk.Toplevel(window)
+    new_window.title("View Scrape Output")
+    new_window.geometry("900x500")
+    text_display = tk.Text(new_window)
+    ys = ttk.Scrollbar(new_window, orient = 'vertical', command = text_display.yview)
+    text_display['yscrollcommand'] = ys.set
+    text_display.config(wrap='word')
+    text_display.pack(side='left', expand=True, fill='both')
+    ys.pack(side='right', fill='both')
 
+    if len(scrape_results_listbox.curselection()) == 0:
+        text_display.insert('end', "Please select between 1 and 100 items.")
 
+    elif len(scrape_results_listbox.curselection()) > 100:
+        text_display.insert('end', "Please select between 1 and 100 items.")
+
+    else:
+        scrapes = list(eval(scrape_list_var.get()))
+        scrape_ids = []
+        for number in scrape_results_listbox.curselection():
+            scrape_ids.append(scrapes[number][0])
+        scrape_tuple = tuple(scrape_ids)
+        file_ids_query = """SELECT file_name FROM scrape_info
+        WHERE scrape_id IN %s """
+        cursor.execute(file_ids_query, (scrape_tuple,))
+        file_ids = cursor.fetchall()
+        file_ids = [file[0] for file in file_ids]
+        text_list = read_from_files(file_ids)
+        for text in text_list:
+            text_display.insert('end', text + '\n\n')
 
 # These methods get the number of items in each listbox.
 def get_scrape_selectcount(*args):
@@ -307,6 +332,7 @@ total_scrapes_label = tk.Label(scrape_control_frame, textvariable=total_scrapes_
 total_successful_scrapes_label = tk.Label(scrape_control_frame, textvariable=total_successful_scrapes_label_var)
 total_tokens_label = tk.Label(scrape_control_frame, textvariable=total_tokens_label_var)
 get_stats_button = tk.Button(master=scrape_control_frame, text = "Update Stats", command=get_stats)
+display_text_button = tk.Button(master=scrape_control_frame, text = "View Scrapes", command=read_files)
 
 # Place the widgets onto the canvas
 college_selectcount_label.pack()
@@ -343,7 +369,7 @@ total_scrapes_label.pack()
 total_successful_scrapes_label.pack()
 total_tokens_label.pack()
 get_stats_button.pack()
-
+display_text_button.pack()
 
 # Run the main loop and close the psycopg2 cursor once the GUI is closed
 window.mainloop()

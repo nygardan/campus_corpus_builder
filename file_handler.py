@@ -25,3 +25,13 @@ def process_nlp_to_file(file_name, date, content):
         json.dump(processed_content, new_file, ensure_ascii=False)
     print('Processed NLP file completed')
     return (new_file_name, str(len(processed_content)))
+
+def read_from_files(file_names):
+    dir = os.path.dirname(__file__)
+    file_output_list = []
+    for file in file_names:
+        file_path = os.path.join(dir, 'scrapes', file)
+        with open(file_path, 'r', encoding='utf-8') as new_file:
+            file_output_list.append(new_file.read())
+            new_file.close()
+    return file_output_list
