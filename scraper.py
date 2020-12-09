@@ -37,7 +37,6 @@ def web_scrape(url):
                 soup = BeautifulSoup(page.text, 'lxml')
                 text = soup.find_all('p', text=True)
                 search_list = [t.get_text() for t in text]
-                start_time = datetime.now()
                 new_list = [t for t in search_list if keyword1 in t.lower() or keyword2 in t.lower()]
                 print(new_list)
                 output_list += new_list
