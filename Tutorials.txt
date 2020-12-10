@@ -1,3 +1,0 @@
-https://realpython.com/python-gui-tkinter/
-
-https://hdl.handle.net/10365/29406 - a neat NDSU dissertation on one NLP method

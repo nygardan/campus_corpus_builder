@@ -1,3 +1,9 @@
+# Code for running tkinter GUI and pulling in our scraper and file functions.
+# Finalized for CSCI 765 12-9-2020, by Dan Nygard
+# The tutorial I used for tkinter is:
+# https://realpython.com/python-gui-tkinter/
+# Very useful for understanding how this runs.
+
 import tkinter as tk
 from tkinter import ttk
 import psycopg2
@@ -5,8 +11,13 @@ from scraper import web_scrape
 from file_handler import *
 from datetime import datetime
 
-# Button functions (self-explanatory)
+# Button functions for sorting our colleges and scrapes (each button does both)
+# Currently can sort by state, family income of students, selectiveness, and ACT score.
+# All are similar and re-use code (not Pythonic, I know...) - refactoring may be necessary
+# I've commented only the first one.
+
 def sort_by_state():
+    # Queries to sort if a state has been selected, or (if no state) to sort all states.
     if state_combobox.get():
         state_query = """SELECT college_id, name, city, state, family_income
         FROM college_info WHERE operating = 1 AND state = '%s' %s
@@ -25,9 +36,15 @@ def sort_by_state():
         WHERE operating = 1 %s %s ORDER BY name %s""" % (two_or_four_var.get(), token_count_var.get(), asc_desc_var.get())
     cursor.execute(state_query)
     college_list = cursor.fetchall()
+
+    # Tkinter uses list variables for its widgets.
+    # You have to set them as below.
     college_list_var.set(college_list)
+
+    # Gives the GUI a count of all items in the list.
     count_label_var.set(str(len(college_list)))
 
+    # The colleges have been sorted, now we sort any scrapes available.
     cursor.execute(state_scrape_query)
     scrape_list = cursor.fetchall()
     scrape_list_var.set(scrape_list)
@@ -120,14 +137,18 @@ def sort_by_act_score():
     scrape_list_var.set(scrape_list)
     scrape_count_label_var.set(str(len(scrape_list)))
 
-# Our most important (and most complicated) method.
+# Our most important method - scrapes data from web and saves to both flat text file and (as tokenized text) to .json.
 def scrape():
+    # In the list you can select one or many colleges.
+    # This gets the college ID of each item selected.
     colleges = list(eval(college_list_var.get()))
     college_ids = []
     for number in results_listbox.curselection():
         college_ids.append(colleges[number][0])
-
+    # prints the ids of our selected schools to the terminal.
     print(college_ids)
+
+    # Scrape the websites selected using our college ID list.
     for college_id in college_ids:
         url_query = """SELECT website, name FROM college_info WHERE college_id = %s""" % college_id
         cursor.execute(url_query)
@@ -135,25 +156,32 @@ def scrape():
         url = info[0]
         college_name = info[1]
         dt = datetime.utcnow()
+
+        # This goes at the top of each flat text file (so you can see that if you're just opening files.)
         info_string = "[## %s %s %s  ##]\n" % (college_name, dt.date(), dt.time())
         print(url)
         print(college_name)
         try:
-
+            # First we run the scrape to get our output and errors lists.
             output, errors = web_scrape(url)
             output_string = "\n".join(output)
             error_string = "\n".join(errors)
             content = info_string + output_string + error_string
-            #print(content)
 
+            # Make a time stamp for the scrape to put in the database.
             time_stamp = str(dt).replace(' ', '_').replace(':', '-')
+
+            # Use a file_handler.py functions to write the .scrape (flat text) and .json files.
             raw_file_name = write_to_file(college_id, time_stamp, content)
             processed_file_name, token_count = process_nlp_to_file(raw_file_name, time_stamp, output_string)
-            # Get file name and add it to database
-            print(processed_file_name + str(token_count))
+            # Get file name and add it to scrape_info table, then print to terminal so we can see progress
             scrape_upload_query = """INSERT INTO scrape_info (college_id, date_time,
             file_name, pages_count, fault_count) VALUES (%s, %s, %s, %s, %s) RETURNING scrape_id;"""
             cursor.execute(scrape_upload_query, (str(college_id), str(dt), raw_file_name, len(output), len(errors)))
+            print(processed_file_name + str(token_count))
+
+            # This is psycopg2's odd way of getting the ID of the scrape we just added.
+            # We use this ID to save our tokenized JSON file and put it into the nlp_info table.
             id_of_scrape = cursor.fetchone()[0]
             nlp_type = 'word_tokenized'
             conn.commit()
@@ -162,19 +190,20 @@ def scrape():
             cursor.execute(processed_file_query, (id_of_scrape, processed_file_name, token_count, nlp_type))
             conn.commit()
 
-
         except Exception as e:
             print(type(e))
             print(e)
-
+    # This is our terminal telling us the scrape we started is now complete.
     print("\nScrape complete!")
 
 # Used to get the statistics that appear in the rightmost side of the GUI.
 def get_stats():
+    # Set our label variables in preparation for the results.
     total_scrapes_label_var.set("Total scrapes: ")
     total_successful_scrapes_label_var.set("Successful scrapes: ")
     total_tokens_label_var.set("Total tokens: ")
 
+    # You can select multiple scrapes. If none are selected it chooses all.
     if len(scrape_results_listbox.curselection()) == 0:
         scrapes = list(eval(scrape_list_var.get()))
         scrape_ids = []
@@ -186,6 +215,7 @@ def get_stats():
         for number in scrape_results_listbox.curselection():
             scrape_ids.append(scrapes[number][0])
 
+    # We take a tuple of scrape ids for the psycopg2 queries and set our labels to show our counts.
     scrape_tuple = tuple(scrape_ids)
     total_scrapes_label_var.set(total_scrapes_label_var.get() + str(len(scrape_ids)))
     successful_scrapes_query = """SELECT COUNT (token_count) FROM nlp_info
@@ -197,7 +227,9 @@ def get_stats():
     cursor.execute(token_count_query, (scrape_tuple,))
     total_tokens_label_var.set(total_tokens_label_var.get() + str(cursor.fetchall()[0][0]))
 
+# This allows us to open up our selected scrapes in a new text window for review.
 def read_files():
+    # Build our new window (a tk.Toplevel), text box, and a scroll bar.
     new_window = tk.Toplevel(window)
     new_window.title("View Scrape Output")
     new_window.geometry("900x500")
@@ -208,6 +240,8 @@ def read_files():
     text_display.pack(side='left', expand=True, fill='both')
     ys.pack(side='right', fill='both')
 
+    # I have it set so that you have to select one or multiple
+    # You can't just open them all by not selecting any.
     if len(scrape_results_listbox.curselection()) == 0:
         scrapes = list(eval(scrape_list_var.get()))
         scrape_ids = []
@@ -220,12 +254,20 @@ def read_files():
         for number in scrape_results_listbox.curselection():
             scrape_ids.append(scrapes[number][0])
 
+    # Run our query to get the file names.
     scrape_tuple = tuple(scrape_ids)
     file_ids_query = """SELECT file_name FROM scrape_info
     WHERE scrape_id IN %s """
     cursor.execute(file_ids_query, (scrape_tuple,))
     file_ids = cursor.fetchall()
     file_ids = [file[0] for file in file_ids]
+    # This reads our text using file_handler.py's read_from_files function.
+    # tkinter has a known bug that prevents it from writing certain unicode characters
+    # (emojis) to the tkinter text box. fixTkBMP is a function that evaluates each character
+    # in the string and replaces it with a <?> if necessary.
+    # It makes our file reader VERY SLOW if there is large input. Works like a charm
+    # if you don't try to open 300 scrapes at the same time.
+
     text_list = read_from_files(file_ids)
     for text in text_list:
         text = fixTkBMP(text)
@@ -237,7 +279,8 @@ def fixTkBMP(text):
     text = ''.join((ch if ord(ch) <= 0xFFFF else '\uFFFD') for ch in text)
     return text
 
-# These methods get the number of items in each listbox.
+# These methods get the number of items selected in each listbox.
+# It's nice to have them when you need to select a certain number of items.
 def get_scrape_selectcount(*args):
     selected = scrape_results_listbox.curselection()
     scrape_selectcount_label_var.set(str(len(selected)))
@@ -246,13 +289,14 @@ def get_college_selectcount(*args):
     selected = results_listbox.curselection()
     college_selectcount_label_var.set(str(len(selected)))
 
-# This one is not tied to a button but used to populate the state selection box.
+# This is used to populate the state selection box.
 def get_state_list():
     state_list_query = "SELECT DISTINCT state FROM college_info ORDER BY state"
     cursor.execute(state_list_query)
     return cursor.fetchall()
 
 
+# We have finished our function definitions! Here we start the program.
 
 # Connect to the database.
 try:
@@ -268,6 +312,9 @@ try:
 except:
     print("Failed to connect to database.")
 
+
+# Tkinter code below - it is a mess
+
 # Set up the tkinter window and frames
 window = tk.Tk()
 window.title("Campus Corpus Builder")
@@ -277,6 +324,7 @@ scrape_list_box_frame = tk.Frame()
 scrape_control_frame = tk.Frame()
 
 # Get the list from the database and assign StringVars (necessary for many tkinter functions)
+# We also pull college info and scrape info from the tables if it is there.
 state_var = tk.StringVar()
 asc_desc_var = tk.StringVar()
 two_or_four_var = tk.StringVar()
@@ -298,17 +346,13 @@ scrape_list = cursor.fetchall()
 scrape_list_var = tk.StringVar(value=scrape_list)
 scrape_count_label_var = tk.StringVar()
 scrape_count_label_var.set(str(len(scrape_list)))
-
 total_scrapes_label_var = tk.StringVar()
 total_successful_scrapes_label_var = tk.StringVar()
 total_tokens_label_var = tk.StringVar()
-
 scrape_selectcount_label_var = tk.StringVar()
 scrape_selectcount_label_var.set('0')
-
 college_selectcount_label_var = tk.StringVar()
 college_selectcount_label_var.set('0')
-
 
 # Make widgets
 count_label = tk.Label(list_box_frame, textvariable=count_label_var)

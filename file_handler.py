@@ -2,6 +2,8 @@ import os
 import json
 from nltk import wordpunct_tokenize
 
+
+# Writes to a .scrape (flat text) file
 def write_to_file(college_id, date, content):
     dir = os.path.dirname(__file__)
     # Put the last part in a separate string and return it so it can be put in the database.
@@ -13,6 +15,8 @@ def write_to_file(college_id, date, content):
     print("Write completed.")
     return file_name
 
+# Tokenizes our scrape content.
+# Writes the tokenized list as a .json object to a .json file
 def process_nlp_to_file(file_name, date, content):
     dir = os.path.dirname(__file__)
     new_file_name = file_name + '.json'
@@ -26,6 +30,7 @@ def process_nlp_to_file(file_name, date, content):
     print('Processed NLP file completed')
     return (new_file_name, str(len(processed_content)))
 
+# This reads our scrape files - used in the GUI text viewer.
 def read_from_files(file_names):
     dir = os.path.dirname(__file__)
     file_output_list = []
