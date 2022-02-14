@@ -21,15 +21,15 @@ def parse_url(url):
 def web_scrape(url):
     output_list = []
     error_list = ['\n########\n',]
-    keyword1='covid'
-    keyword2='coronavirus'
+    # keyword1='covid'
+    # keyword2='coronavirus'
 
     try:
         # Gather our links. We are set up to scrape two levels (the home page and all links on the home page)
         # Going further levels deep is fairly easy to code, but difficult to wait for the scrape results
         # as the number of links to scrape increases immensely with each level.
         url = parse_url(url)
-        page = requests.get(url, timeout=5)
+        page = requests.get(url, headers={"User-Agent":"Covid-19 Research Project | danjel.nygard@ndsu.edu"}, timeout=5)
         soup = BeautifulSoup(page.text, 'lxml')
         links = [url]
         links += soup.find_all('a', attrs={'href': re.compile("^http")})
@@ -41,17 +41,17 @@ def web_scrape(url):
                     address = link
                 else:
                     address = link.get('href')
-                page = requests.get(address, timeout=5)                
+                page = requests.get(address, timeout=3)                
                 # The lxml parser should speed things up over the standard soup parser
-                soup = BeautifulSoup(page.text, 'lxml')                
+                soup = BeautifulSoup(page.text, 'lxml')              
                 # Get all text in the <p> elements
                 text = soup.find_all('p', text=True)
                 search_list = [t.get_text() for t in text]
                 # Evaluate if a <p> element has covid :)
-                new_list = [t for t in search_list if keyword1 in t.lower() or keyword2 in t.lower()]
+                # new_list = [t for t in search_list if keyword1 in t.lower() or keyword2 in t.lower()]
                 # This helps when you're watching the terminal - you can see progress through the scrape
-                print(new_list)
-                output_list += new_list
+                print(search_list)
+                output_list += search_list
             except Exception as e:
                 print(str(e))
                 error_list.append(str(e))

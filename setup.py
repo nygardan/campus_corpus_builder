@@ -16,7 +16,7 @@ import pandas as pd
 import psycopg2
 
 # Set up dataframe (pull from csv) and set up the connection
-df = pd.read_csv("college_info.csv", encoding = "ISO-8859-1", engine='python', na_values='PrivacySuppressed')
+df = pd.read_csv("college_info_2_13_2022.csv", encoding = "ISO-8859-1", engine='python', na_values='PrivacySuppressed')
 try:
     conn = psycopg2.connect(
         dbname= "postgres",
